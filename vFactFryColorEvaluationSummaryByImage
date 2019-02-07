@@ -1,0 +1,16 @@
+SELECT
+	e.FryColorEvaluationImageID, 
+	SUM(i.Grade) AS DigitalColorScoreExludingSugarEnds, 
+	SUM(CASE WHEN i.SugarEndsGrade IN (0, 1, 2) THEN 0 
+			 ELSE 1 
+		END) AS DigitalSugarEndsScore, 
+		SUM(i.Grade) + SUM(CASE WHEN i.SugarEndsGrade IN (0, 1, 2) THEN 0 
+								ELSE 1 
+							END) AS TotalColorScore
+
+FROM	dbo.vFactFryColorEvaluation AS e 
+		INNER JOIN dbo.Fry_Individual_Info AS i 
+			ON i.ImageGuid = e.FryColorEvaluationImageID
+			and i.DeletedDate is NULL
+
+GROUP BY e.FryColorEvaluationImageID
