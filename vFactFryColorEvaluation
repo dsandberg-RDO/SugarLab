@@ -1,0 +1,113 @@
+SELECT 
+	 LabSampleID AS LabSampleNumber 
+	,i.ID AS FryColorEvaluationImageID 
+	,1 AS FrySampleTypeID 
+	,t .FrySampleTypeDescription AS FrySampleType 
+  ,s.RawColor0 AS FryCountVisualColorScore0 
+	,s.RawColor1 AS FryCountVisualColorScore1 
+	,s.RawColor2 AS FryCountVisualColorScore2 
+	,s.RawColor3 AS FryCountVisualColorScore3 
+	,s.RawColor4 AS FryCountVisualColorScore4
+    ,(SELECT	COUNT(Grade)
+     FROM		Fry_Individual_Info j
+     WHERE		j.ImageGuid = i.ID AND j.Grade = 0) AS FryCountDigitalColorScore0
+    ,(SELECT    COUNT(Grade)
+     FROM       Fry_Individual_Info j
+     WHERE      j.ImageGuid = i.ID AND j.Grade = 1) AS FryCountDigitalColorScore1
+    ,(SELECT    COUNT(Grade)
+     FROM       Fry_Individual_Info j
+     WHERE      j.ImageGuid = i.ID AND j.Grade = 2) AS FryCountDigitalColorScore2
+    ,(SELECT    COUNT(Grade)
+     FROM       Fry_Individual_Info j
+     WHERE      j.ImageGuid = i.ID AND j.Grade = 3) AS FryCountDigitalColorScore3
+    ,(SELECT    COUNT(Grade)
+     FROM       Fry_Individual_Info j
+     WHERE      j.ImageGuid = i.ID AND j.Grade = 4) AS FryCountDigitalColorScore4
+    ,(SELECT    COUNT(SugarEndsGrade)
+     FROM       Fry_Individual_Info j
+     WHERE      j.ImageGuid = i.ID AND j.Grade = 0) AS FryCountDigitalSugarEndScore0
+    ,(SELECT	COUNT(SugarEndsGrade)
+     FROM       Fry_Individual_Info j
+     WHERE      j.ImageGuid = i.ID AND j.Grade = 1) AS FryCountDigitalSugarEndScore1
+    ,(SELECT	COUNT(SugarEndsGrade)
+     FROM       Fry_Individual_Info j
+     WHERE      j.ImageGuid = i.ID AND j.Grade = 2) AS FryCountDigitalSugarEndScore2
+    ,(SELECT    COUNT(SugarEndsGrade)
+     FROM       Fry_Individual_Info j
+     WHERE      j.ImageGuid = i.ID AND j.Grade = 3) AS FryCountDigitalSugarEndScore3
+    ,(SELECT    COUNT(SugarEndsGrade)
+     FROM       Fry_Individual_Info j
+     WHERE      j.ImageGuid = i.ID AND j.Grade = 4) AS FryCountDigitalSugarEndScore4 
+	,i.ResizedFilePath AS ImageFilesharePath
+	,REPLACE(i.ResizedFilePath, '\\rdofiles\Shared\ResizedFryFiles\PROD\', 'https://rdoprodblob.blob.core.windows.net/frycolorevaluationimage/') AS ResizedImageURL
+	,REPLACE(i.ResizedFilePath, '\\rdofiles\Shared\ResizedFryFiles\PROD\', 'https://rdoprodblob.blob.core.windows.net/frycoloranalysisresultimage/') AS DigitalAnalysisImageURL
+
+FROM    dbo.SugarTests AS s 
+		LEFT JOIN Fry_Image i 
+			ON i.SampleType + 1 = 1 
+			AND i.SampleID = [LabSampleID] 
+			AND i.DeletedBy is null
+		LEFT JOIN FrySampleType t 
+			ON t .FrySampleTypeID = 1
+
+WHERE   SampleRunDate >= '2018-08-01' 
+		AND i.ID IS NOT NULL 
+		AND i.ID NOT IN ('2CB4F243-B165-4516-A486-7177C71B19C2', '06C23DCD-337C-44DB-B59D-8540AC0037D8')
+
+UNION ALL
+
+SELECT        
+	LabSampleID AS LabSampleNumber
+	,i.ID AS FryColorEvaluationImageID
+	,2 AS FrySampleTypeID
+	,t.FrySampleTypeDescription AS FrySampleType
+	,s.BlanchColor0 AS FryCountVisualColorScore0
+	,s.BlanchColor1 AS FryCountVisualColorScore1
+	,s.BlanchColor2 AS FryCountVisualColorScore2
+	,s.BlanchColor3 AS FryCountVisualColorScore3
+	,s.BlanchColor4 AS FryCountVisualColorScore4
+	,(SELECT	COUNT(Grade)
+      FROM		Fry_Individual_Info j
+      WHERE		j.ImageGuid = i.ID AND j.Grade = 0) AS FryCountDigitalColorScore0
+	,(SELECT	COUNT(Grade)
+      FROM		Fry_Individual_Info j
+      WHERE     j.ImageGuid = i.ID AND j.Grade = 1) AS FryCountDigitalColorScore1
+	,(SELECT    COUNT(Grade)
+      FROM      Fry_Individual_Info j
+      WHERE     j.ImageGuid = i.ID AND j.Grade = 2) AS FryCountDigitalColorScore2
+	,(SELECT    COUNT(Grade)
+      FROM      Fry_Individual_Info j
+      WHERE     j.ImageGuid = i.ID AND j.Grade = 3) AS FryCountDigitalColorScore3
+	,(SELECT    COUNT(Grade)
+      FROM      Fry_Individual_Info j
+      WHERE     j.ImageGuid = i.ID AND j.Grade = 4) AS FryCountDigitalColorScore4
+	,(SELECT    COUNT(SugarEndsGrade)
+      FROM      Fry_Individual_Info j
+      WHERE     j.ImageGuid = i.ID AND j.Grade = 0) AS FryCountDigitalSugarEndScore0
+	,(SELECT    COUNT(SugarEndsGrade)
+      FROM      Fry_Individual_Info j
+      WHERE     j.ImageGuid = i.ID AND j.Grade = 1) AS FryCountDigitalSugarEndScore1
+	,(SELECT	COUNT(SugarEndsGrade)
+      FROM      Fry_Individual_Info j
+      WHERE     j.ImageGuid = i.ID AND j.Grade = 2) AS FryCountDigitalSugarEndScore2
+	,(SELECT    COUNT(SugarEndsGrade)
+      FROM      Fry_Individual_Info j
+      WHERE     j.ImageGuid = i.ID AND j.Grade = 3) AS FryCountDigitalSugarEndScore3
+	,(SELECT    COUNT(SugarEndsGrade)
+      FROM      Fry_Individual_Info j
+      WHERE     j.ImageGuid = i.ID AND j.Grade = 4) AS FryCountDigitalSugarEndScore4
+	,i.ResizedFilePath AS ImageFilesharePath
+	,REPLACE(i.ResizedFilePath, '\\rdofiles\Shared\ResizedFryFiles\PROD\', 'https://rdoprodblob.blob.core.windows.net/frycolorevaluationimage/') AS AzureImageURL
+	,REPLACE(i.ResizedFilePath, '\\rdofiles\Shared\ResizedFryFiles\PROD\', 'https://rdoprodblob.blob.core.windows.net/frycoloranalysisresultimage/') AS DigitalAnalysisImageURL
+
+FROM    dbo.SugarTests AS s 
+		LEFT JOIN Fry_Image i 
+			ON i.SampleType + 1 = 2 
+			and i.DeletedDate is null
+			AND i.SampleID = [LabSampleID] 
+		LEFT JOIN FrySampleType t 
+			ON t .FrySampleTypeID = 2
+
+WHERE   SampleRunDate >= '2018-08-01' 
+		AND i.ID IS NOT NULL 
+		AND i.ID NOT IN ('2CB4F243-B165-4516-A486-7177C71B19C2', '06C23DCD-337C-44DB-B59D-8540AC0037D8')
