@@ -1,0 +1,46 @@
+SELECT  
+	s.SampleRunDate AS SugarSampleDate
+	,s.Field_ID AS FieldID
+	,dbo.fnFarmName(s.Field_ID) AS Farm
+	,dbo.fnFieldName(s.Field_ID) AS Field
+	,b.Bin_Number AS BinNumber
+	,AVG(ISNULL(s.Beaker_A_Sucrose_mgG, s.Beaker_A_Sucrose_gL * (s.Beaker_A_ML / s.Beaker_A_grams))) AS SucroseStemEndMilligramPerGram
+	,AVG(ISNULL(s.Beaker_A_Glucose_mgG, s.Beaker_A_Glucose_gL * (s.Beaker_A_ML / s.Beaker_A_grams))) AS GlucoseStemEndMilligramPerGram
+	,(SELECT AVG(cs.DigitalColorScoreExludingSugarEnds) AS Expr1
+      FROM	dbo.vFactSugarLabImages AS i 
+			LEFT OUTER JOIN dbo.vFactFryColorEvaluationSummaryByImage AS cs 
+				ON cs.FryColorEvaluationImageID = i.LabImageID
+       WHERE	(i.LabSampleID = s.LabSampleID) 
+				AND (i.ImageCategory = 'Raw') 
+				AND (i.LabSampleID = CONVERT(nvarchar(4), YEAR(s.SampleRunDate)) + 
+									 CONVERT(nvarchar(4), FORMAT(s.SampleRunDate, 'MM')) + 
+									 CONVERT(nvarchar(4), FORMAT(s.SampleRunDate, 'dd')) + 
+									 CONVERT(nvarchar(4), ISNULL(RIGHT(s.LabSampleID, 2), '00')))) AS RawTotalColorScore
+	,(SELECT AVG(cs.DigitalColorScoreExludingSugarEnds) AS Expr1
+      FROM  dbo.vFactSugarLabImages AS i 
+			LEFT OUTER JOIN dbo.vFactFryColorEvaluationSummaryByImage AS cs 
+				ON cs.FryColorEvaluationImageID = i.LabImageID
+      WHERE (i.LabSampleID = i.LabSampleID) 
+			AND (i.ImageCategory = 'Blanch') 
+			AND (i.LabSampleID = CONVERT(nvarchar(4), YEAR(s.SampleRunDate)) + 
+								 CONVERT(nvarchar(4), FORMAT(s.SampleRunDate, 'MM')) + 
+								 CONVERT(nvarchar(4), FORMAT(s.SampleRunDate, 'dd')) + 
+								 CONVERT(nvarchar(4), ISNULL(RIGHT(s.LabSampleID, 2), '00')))) AS BlanchTotalColorScore
+
+FROM    dbo.SugarTests AS s 
+		LEFT OUTER JOIN dbo.Truck_Bin_Info AS b 
+			ON b.Truck_Bin_Info_ID = s.Bin_ID 
+		LEFT OUTER JOIN dbo.Crop_Variety_Lookup AS cvl 
+			ON cvl.Crop_Variety_ID = s.Variety 
+		LEFT OUTER JOIN dbo.land_info_crop_schedule AS lics 
+			ON lics.Field_ID = s.Field_ID 
+			AND lics.Land_Crop_year = CASE WHEN Month([SampleRunDate]) >= 8 THEN YEAR([SampleRunDate]) 
+										   ELSE YEAR([SampleRunDate]) - 1 
+									   END
+
+WHERE   (s.Field_ID IS NOT NULL) 
+		AND (ISNULL(s.Beaker_A_Glucose_mgG, s.Beaker_A_Glucose_gL * (s.Beaker_A_ML / s.Beaker_A_grams)) IS NOT NULL) 
+		AND (ISNULL(s.Beaker_A_Sucrose_mgG, s.Beaker_A_Sucrose_gL * (s.Beaker_A_ML / s.Beaker_A_grams)) IS NOT NULL) 
+		AND (s.SampleRunDate IS NOT NULL) AND (s.SampleRunDate >= '2018-09-01')
+
+GROUP BY s.SampleRunDate, s.Field_ID, b.Bin_Number, s.LabSampleID
